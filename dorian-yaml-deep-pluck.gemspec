@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "dorian-yaml-deep-pluck"
-  s.version = "0.0.2"
+  s.version = File.read("VERSION").strip
   s.summary = "plucks yaml deeply from yaml path"
   s.description = s.summary
   s.authors = ["Dorian Marié"]

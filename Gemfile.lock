@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dorian-yaml-deep-pluck (0.0.2)
+    dorian-yaml-deep-pluck (0.0.3)
       dorian-arguments
       yaml
 

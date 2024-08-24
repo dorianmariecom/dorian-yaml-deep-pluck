@@ -1,12 +1,71 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-if ARGV.size != 1 || ARGV[0] == "--help" || ARGV[0] == "-h"
-  puts "USAGE: ... | each CODE"
-  exit
+require "dorian/arguments"
+require "yaml"
+
+def deep_pluck(json, &block)
+  if json.is_a?(Hash)
+    results =
+      json
+        .map do |key, value|
+          [deep_pluck(key, &block), deep_pluck(value, &block)]
+        end
+        .flatten(1)
+
+    results << yield(json)
+
+    results.compact.empty? ? nil : results.compact
+  elsif json.is_a?(Array)
+    results = json.map { |element| deep_pluck(element, &block) }
+
+    results << yield(json)
+
+    results.compact.empty? ? nil : results.compact
+  else
+    nil
+  end
 end
 
-$stdin.each_line do |it|
-  it.strip!
-  eval(ARGV.first)
+parsed =
+  Dorian::Arguments.parse(
+    yaml: {
+      alias: :y
+    },
+    ruby: {
+      alias: :r
+    },
+    version: {
+      alias: :v
+    },
+    help: {
+      alias: :h
+    }
+  )
+
+abort parsed.help if parsed.options.help
+
+if parsed.options.version
+  abort File.read(File.expand_path("../../VERSION", __FILE__))
+end
+
+inputs = parsed.files.map { |file| File.read(file) }
+inputs = [$stdin.each_line.to_a.join] if inputs.empty?
+keys = parsed.arguments.map { |key| key.to_i.to_s == key ? key.to_i : key }
+
+inputs.each do |input|
+  result =
+    deep_pluck(YAML.safe_load(input)) do |json|
+      json.is_a?(Hash) || json.is_a?(Array) ? json.dig(*keys) : nil
+    rescue TypeError
+      nil
+    end
+
+  if parsed.options.yaml
+    puts result.to_yaml
+  elsif parsed.options.ruby
+    p result
+  else
+    puts result
+  end
 end

@@ -7,11 +7,9 @@ require "yaml"
 def deep_pluck(json, &block)
   if json.is_a?(Hash)
     results =
-      json
-        .map do |key, value|
-          [deep_pluck(key, &block), deep_pluck(value, &block)]
-        end
-        .flatten(1)
+      json.flat_map do |key, value|
+        [deep_pluck(key, &block), deep_pluck(value, &block)]
+      end
 
     results << yield(json)
 

@@ -4,18 +4,16 @@
 require "dorian/arguments"
 require "yaml"
 
-def deep_pluck(json, &block)
+def deep_pluck(json, &)
   if json.is_a?(Hash)
     results =
-      json.flat_map do |key, value|
-        [deep_pluck(key, &block), deep_pluck(value, &block)]
-      end
+      json.flat_map { |key, value| [deep_pluck(key, &), deep_pluck(value, &)] }
 
     results << yield(json)
 
     results.compact.empty? ? nil : results.compact
   elsif json.is_a?(Array)
-    results = json.map { |element| deep_pluck(element, &block) }
+    results = json.map { |element| deep_pluck(element, &) }
 
     results << yield(json)
 
